@@ -15,6 +15,12 @@ Le workshop se concentrera sur la manière dont l'image est construite à partir
 
 Une sélection d'itérations sera également tracée sous forme de dessins physiques à l'aide de traceurs de plume modernes et anciens.
 
+## Programme
+* 10h - 10h45 : présentation Julien + outils (p5js, plotters AxiDraw + Roland DXY) 
+* 11h - 13h : début de la session, template fourni pour cadrer
+* 14h - 16h30 : itérations, productions
+* 16h30 - 18h : impression + affichage
+
 ## Sketches
 * [Template](https://editor.p5js.org/v3ga/sketches/lD0uUIE_g)
 * [Sketch avec paramètres aléatoires et interface](https://editor.p5js.org/v3ga/sketches/GEq3U8fdO)
