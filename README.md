@@ -1,1 +1,3 @@
-# Workshop_Recoding_Overflow_ESA_2026
+# Recoding : aux origines de l'art génératif
+
+https://overflow.gallery/fr/events/workshop-recoding-v3ga/
