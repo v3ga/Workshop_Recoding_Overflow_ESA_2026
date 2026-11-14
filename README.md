@@ -13,7 +13,7 @@ Les participant·es partiront d'un « recode » contemporain de l'œuvre origina
 
 Le workshop se concentrera sur la manière dont l'image est construite à partir de règles, de répétitions, de variations et de contraintes algorithmiques, dans la lignée des approches développées par les pionniers de l'art informatique dans les années 1960 et 1970. À partir de cette base de code commune, les participant·es créeront leurs propres itérations et mutations de l'œuvre.
 
-Une sélection d'itérations sera également tracée sous forme de dessins physiques à l'aide de traceurs de plume modernes et anciens.
+Une sélection d'itérations sera également tracée sous forme de dessins physiques à l'aide de traceurs.
 
 ## Programme
 * 10h - 10h45 : présentation Julien + outils (p5js, plotters AxiDraw + Roland DXY) 
