@@ -25,13 +25,17 @@ Une sélection d'itérations sera également tracée sous forme de dessins physi
 ### ESA Saint-Luc
 * 30 minutes : présentation Julien + outils, installation
 * 2h : expérimentations dans le code
-* 1h30 : impressions plotter iDraw
+* 1h30 : impressions plotter AxiDraw
 
 ## Sketches
 * [Template Overflow](https://editor.p5js.org/v3ga/sketches/lD0uUIE_g)
 * [Template ESA]
     * Template 1 / Quatre éléments (https://editor.p5js.org/v3ga/sketches/svXuz5vhe)
     * Template 2 / M comme Malevitch (https://editor.p5js.org/v3ga/sketches/UeVc6oN4i)
+
+## Outil 
+* A6 to A4 : https://www.v3ga.net/esa_saint_luc/a6_to_a4/
+
 
 ## Overflow : Marche à suivre
 ### La méthode simple
