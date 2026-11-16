@@ -325,7 +325,7 @@ class SerialConnection
         return true;
     }
 
-    async write(s, bRead=false)
+    async write(s, bRead=false, timeoutMs=0)
     {
         if (SerialConnection.__LOG__)               
             console.log(`serial, writing ${s}`);
@@ -336,7 +336,7 @@ class SerialConnection
 
         if (bRead)
         {
-            let response = await this.read();
+            let response = await this.read(timeoutMs);
             if (SerialConnection.__LOG__)               
                 console.log(`serial, response is ${response}`)
             return response;
@@ -344,12 +344,27 @@ class SerialConnection
         return null;
     }
 
-    async read()
+    async read(timeoutMs=0)
     {
         let response="";
         while (true) 
         {
-            const { value, done } = await this.reader.read();
+            if (!this.pendingRead)
+                this.pendingRead = this.reader.read();
+            let result = this.pendingRead;
+            if (timeoutMs>0)
+            {
+                result = await Promise.race([
+                    this.pendingRead,
+                    new Promise(r => setTimeout(() => r(null), timeoutMs))
+                ]);
+                if (result === null)
+                    return null; // timeout : pendingRead is kept for the next read
+            }
+            else
+                result = await this.pendingRead;
+            this.pendingRead = null;
+            const { value, done } = result;
             // Check validity
             if (done || value.length === 0) 
             {
@@ -374,6 +389,7 @@ class PlotterRolandDXY
     static __LOG__              = true;
     static RS232_PREFIX         = String.fromCharCode(27) + ".";
     static BUFFER_CHUNK_SIZE    = 64;
+    static BLIND_DELAY_MS       = 150;   // pause between chunks when ESC.B is unsupported
 
     // 1300 model / EXPAND size
     static width_units          = 16800;
@@ -449,7 +465,20 @@ class PlotterRolandDXY
     // ----------------------------------------------------------------
     async checkBytesAvailable()
     {
-        let bytesAvailable = await this.serialConnection.write( PlotterRolandDXY.RS232_PREFIX+"B", true);
+        // Some models (e.g. DXY-990) may not answer ESC.B : after a timeout,
+        // fall back to blind chunk writing paced by a fixed delay.
+        if (this.noBufferQuery)
+        {
+            await new Promise(r => setTimeout(r, PlotterRolandDXY.BLIND_DELAY_MS));
+            return PlotterRolandDXY.BUFFER_CHUNK_SIZE;
+        }
+        let bytesAvailable = await this.serialConnection.write( PlotterRolandDXY.RS232_PREFIX+"B", true, 1500);
+        if (bytesAvailable === null)
+        {
+            console.warn("serial, no answer to ESC.B : switching to blind mode");
+            this.noBufferQuery = true;
+            return PlotterRolandDXY.BUFFER_CHUNK_SIZE;
+        }
         return bytesAvailable ? parseInt(bytesAvailable) : -1;
     }
 }

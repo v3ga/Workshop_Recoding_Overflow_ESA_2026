@@ -163,7 +163,7 @@ async function onTransformWithVpype()
     svgTransformed                 = result;
     svgPreviewResult.elt.innerHTML = svgTransformed;
     hpgl                           = "";
-    hpglPreviewEl.elt.textContent  = "";
+    hpglPreviewEl.elt.value        = "";
     enableBtn(btnSaveSvg,  true);
     enableBtn(btnConvert,  true);
     enableBtn(btnSaveHpgl, false);
@@ -196,7 +196,10 @@ function createColumnResult(parent)
   let resultView = createDiv().id('result-view').parent(col);
 
   svgPreviewResult = createDiv().id('svg-preview-result').addClass('preview').addClass('pane').parent(resultView);
-  hpglPreviewEl    = createElement('pre').id('hpgl-preview').addClass('preview').addClass('pane').parent(resultView);
+  hpglPreviewEl    = createElement('textarea').id('hpgl-preview').addClass('preview').addClass('pane').parent(resultView);
+  hpglPreviewEl.attribute('spellcheck', 'false');
+  hpglPreviewEl.attribute('placeholder', 'Type or paste HPGL here (e.g. IN;SP1;PU0,0;PD1000,1000;PU;SP0;), or convert a SVG.');
+  hpglPreviewEl.input(onHpglEdited);
 
   let tabs   = createDiv().addClass('tabs').parent(resultView);
   btnTabSvg  = createButton('SVG').parent(tabs);
@@ -264,19 +267,31 @@ async function onConvertToHPGL()
 
   if (hpgl)
   {
-    hpglPreviewEl.elt.textContent = hpgl;
+    hpglPreviewEl.elt.value = hpgl;
     enableBtn(btnSaveHpgl, true);
     enableBtn(btnCopyHpgl, true);
     enableBtnPlot();
   }
   else
   {
-    hpglPreviewEl.elt.textContent = "Error: the server did not return any HPGL code (check the browser console and server.py logs).";
+    hpglPreviewEl.elt.value = "Error: the server did not return any HPGL code (check the browser console and server.py logs).";
     enableBtn(btnSaveHpgl, false);
     enableBtn(btnCopyHpgl, false);
   }
   showResultTab('hpgl');
   enableBtn(btnConvert, true);
+}
+
+//------------------------------------------------------------
+// L'éditeur HPGL est libre : tout ce qui est saisi devient le HPGL
+// sauvegardé, copié ou tracé.
+function onHpglEdited()
+{
+  hpgl = hpglPreviewEl.elt.value.trim();
+  const hasHpgl = hpgl != "";
+  enableBtn(btnSaveHpgl, hasHpgl);
+  enableBtn(btnCopyHpgl, hasHpgl);
+  enableBtn(btnPlot,     hasHpgl && isConnected);
 }
 
 //------------------------------------------------------------

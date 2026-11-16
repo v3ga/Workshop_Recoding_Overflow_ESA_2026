@@ -85,11 +85,10 @@ function draw()
         let y = yGrid + j*step;
 
         // Densité
-        let dst = max(abs(i - cx), abs(j - cy));
-        let n   = map(dst / dMax,0,params.nbLinesMin,params.nbLinesMax,1);
+        //let dst = max(abs(i - cx), abs(j - cy));
+        //let n   = map(dst / dMax,0,params.nbLinesMin,params.nbLinesMax,1);
 
         // Dessin du motif
-        drawPatternSegrid(x,y,step,i,j,n);              
       }
     }
   }

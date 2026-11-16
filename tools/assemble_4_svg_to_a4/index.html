@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Recoding — Assemble 4 SVG (10,5 × 14,85 cm) into an A4</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    box-sizing: border-box; padding: 1em; height: 100vh;
+    display: flex; flex-direction: column; gap: .75em;
+  }
+  .controls { display: flex; gap: .75em; align-items: center; flex-wrap: wrap; }
+  .hint { color: #666; font-size: .85em; }
+
+  #stage { flex: 1; min-height: 0; display: flex; justify-content: center; align-items: center; }
+
+  /* The A4 sheet : aspect-ratio follows orientation (set from JS), fits the stage */
+  #sheet {
+    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+    background: #fff; box-shadow: 0 0 6px rgba(0,0,0,.35);
+    max-width: 100%; max-height: 100%;
+    aspect-ratio: 210 / 297; height: 100%;
+  }
+  #sheet.landscape { aspect-ratio: 297 / 210; height: auto; width: 100%; }
+
+  .slot {
+    position: relative; min-width: 0; min-height: 0; overflow: hidden;
+    border: 1px dashed #bbb; box-sizing: border-box;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #777; text-align: center; font-size: .9em;
+  }
+  .slot.drag-over { background: #eef; border-color: #333; color: #333; }
+  .slot svg { width: 100%; height: 100%; display: block; }
+  .slot .clear {
+    position: absolute; top: 4px; right: 4px; display: none;
+    padding: .1em .5em; font-size: .8em;
+  }
+  .slot.filled .clear { display: block; }
+  .slot .label { position: absolute; left: 6px; top: 4px; font-size: .75em; color: #999; pointer-events: none; }
+</style>
+</head>
+<body>
+  <div class="controls">
+    <label>Orientation
+      <select id="orientation">
+        <option value="portrait">A4 portrait (2 × 2 A6 portrait)</option>
+        <option value="landscape">A4 landscape (2 × 2 A6 landscape)</option>
+      </select>
+    </label>
+    <button id="save" disabled>Save assembled SVG</button>
+    <button id="reset">Clear all</button>
+    <span class="hint">Drop up to 4 SVG files on a slot (extra files fill the following slots), or click a slot.</span>
+  </div>
+
+  <div id="stage"><div id="sheet"></div></div>
+  <input type="file" id="fileInput" accept=".svg,image/svg+xml" multiple hidden />
+
+<script>
+//------------------------------------------------------------
+// A6 cell = 105 x 148.5 mm, A4 = 2 x 2 cells, no scaling
+//------------------------------------------------------------
+const A4 = { portrait: [210, 297], landscape: [297, 210] };
+const SVG_NS = "http://www.w3.org/2000/svg";
+const PX_PER_UNIT = { px: 1, mm: 96/25.4, cm: 96/2.54, in: 96, pt: 96/72, pc: 16, "": 1 };
+
+const slots = [null, null, null, null];   // { name, el: <svg> element (parsed), vb: [x,y,w,h] }
+let targetSlot = 0;                       // slot targeted by the file picker
+
+const $ = id => document.getElementById(id);
+const sheet = $('sheet'), orientationSel = $('orientation');
+
+//------------------------------------------------------------
+function parseLength(v)
+{
+  if (!v) return null;
+  const m = String(v).trim().match(/^([\d.]+)\s*([a-z%]*)$/i);
+  if (!m || m[2] === '%') return null;
+  return parseFloat(m[1]) * (PX_PER_UNIT[m[2].toLowerCase()] ?? 1);
+}
+
+//------------------------------------------------------------
+function parseSvg(text, name)
+{
+  const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+  const el  = doc.documentElement;
+  if (doc.querySelector('parsererror') || el.localName !== 'svg')
+    throw new Error(`${name} is not a valid SVG`);
+
+  let vb = (el.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
+  if (vb.length !== 4 || vb.some(isNaN))
+  {
+    const w = parseLength(el.getAttribute('width'))  ?? 396.85;   // 105 mm in px
+    const h = parseLength(el.getAttribute('height')) ?? 561.26;   // 148.5 mm in px
+    vb = [0, 0, w, h];
+  }
+  return { name, el, vb };
+}
+
+//------------------------------------------------------------
+function loadFiles(files, startSlot)
+{
+  const list = [...files].filter(f => /svg/i.test(f.type) || /\.svg$/i.test(f.name));
+  let i = startSlot;
+  list.forEach(file =>
+  {
+    // fill the target slot first, then following empty slots, then wrap
+    while (i < 4 && i > startSlot && slots[i]) i++;
+    if (i >= 4) return;
+    const idx = i++;
+    const reader = new FileReader();
+    reader.onload = e =>
+    {
+      try { slots[idx] = parseSvg(e.target.result, file.name); }
+      catch (err) { alert(err.message); }
+      render();
+    };
+    reader.readAsText(file);
+  });
+}
+
+//------------------------------------------------------------
+function render()
+{
+  const landscape = orientationSel.value === 'landscape';
+  sheet.classList.toggle('landscape', landscape);
+  sheet.innerHTML = '';
+
+  slots.forEach((s, i) =>
+  {
+    const cell = document.createElement('div');
+    cell.className = 'slot' + (s ? ' filled' : '');
+    if (s)
+    {
+      const svg = s.el.cloneNode(true);
+      svg.setAttribute('viewBox', s.vb.join(' '));
+      svg.removeAttribute('width'); svg.removeAttribute('height');
+      svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+      cell.appendChild(document.importNode(svg, true));
+    }
+    else cell.append(`Slot ${i + 1}\nDrop a SVG`);
+
+    const label = document.createElement('span'); label.className = 'label'; label.textContent = s ? `${i + 1} · ${s.name}` : i + 1;
+    const clear = document.createElement('button'); clear.className = 'clear'; clear.textContent = '×';
+    clear.onclick = e => { e.stopPropagation(); slots[i] = null; render(); };
+    cell.append(label, clear);
+
+    cell.addEventListener('click', () => { targetSlot = i; $('fileInput').click(); });
+    cell.addEventListener('dragover',  e => { e.preventDefault(); cell.classList.add('drag-over'); });
+    cell.addEventListener('dragleave', () => cell.classList.remove('drag-over'));
+    cell.addEventListener('drop', e => { e.preventDefault(); cell.classList.remove('drag-over'); loadFiles(e.dataTransfer.files, i); });
+    sheet.appendChild(cell);
+  });
+
+  $('save').disabled = !slots.some(Boolean);
+}
+
+//------------------------------------------------------------
+// Make element ids unique per slot so gradients / clipPaths / <use> do not collide
+function prefixIds(root, prefix)
+{
+  const ids = new Set();
+  root.querySelectorAll('[id]').forEach(n => ids.add(n.getAttribute('id')));
+  if (!ids.size) return;
+  const fix = v =>
+  {
+    ids.forEach(id => { v = v.split(`url(#${id})`).join(`url(#${prefix}${id})`); });
+    return v;
+  };
+  [root, ...root.querySelectorAll('*')].forEach(n =>
+  {
+    [...n.attributes].forEach(a =>
+    {
+      if (a.name === 'id') a.value = prefix + a.value;
+      else if ((a.localName === 'href') && a.value.startsWith('#') && ids.has(a.value.slice(1))) a.value = '#' + prefix + a.value.slice(1);
+      else if (a.value.includes('url(#')) a.value = fix(a.value);
+    });
+    if (n.localName === 'style') n.textContent = fix(n.textContent);
+  });
+}
+
+//------------------------------------------------------------
+function buildAssembledSvg()
+{
+  const [W, H] = A4[orientationSel.value];
+  const cw = W / 2, ch = H / 2;
+
+  const root = document.createElementNS(SVG_NS, 'svg');
+  root.setAttribute('xmlns', SVG_NS);
+  root.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+  root.setAttribute('width',  `${W}mm`);
+  root.setAttribute('height', `${H}mm`);
+  root.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  slots.forEach((s, i) =>
+  {
+    if (!s) return;
+    const nested = s.el.cloneNode(true);
+    nested.setAttribute('x', (i % 2) * cw);
+    nested.setAttribute('y', Math.floor(i / 2) * ch);
+    nested.setAttribute('width',  cw);
+    nested.setAttribute('height', ch);
+    nested.setAttribute('viewBox', s.vb.join(' '));
+    nested.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    prefixIds(nested, `s${i + 1}-`);
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('id', `slot-${i + 1}`);
+    g.appendChild(document.importNode(nested, true));
+    root.appendChild(g);
+  });
+
+  return '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(root);
+}
+
+//------------------------------------------------------------
+$('save').onclick = () =>
+{
+  const blob = new Blob([buildAssembledSvg()], { type: 'image/svg+xml' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `assembled_a4_${orientationSel.value}.svg`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+$('reset').onclick = () => { slots.fill(null); render(); };
+$('fileInput').onchange = e => { loadFiles(e.target.files, targetSlot); e.target.value = ''; };
+orientationSel.onchange = render;
+
+// dropping outside a slot must not make the browser open the file
+['dragover', 'drop'].forEach(t => window.addEventListener(t, e => e.preventDefault()));
+
+render();
+</script>
+</body>
+</html>

@@ -16,16 +16,24 @@ Le workshop se concentrera sur la manière dont l'image est construite à partir
 Une sélection d'itérations sera également tracée sous forme de dessins physiques à l'aide de traceurs.
 
 ## Programme
+### Overflow
 * 10h - 10h45 : présentation Julien + outils (p5js, plotters AxiDraw + Roland DXY) 
 * 11h - 13h : début de la session, template fourni pour cadrer
 * 14h - 16h30 : itérations, productions
 * 16h30 - 18h : impression + affichage
 
-## Sketches
-* [Template](https://editor.p5js.org/v3ga/sketches/lD0uUIE_g)
-* [Sketch avec paramètres aléatoires et interface](https://editor.p5js.org/v3ga/sketches/GEq3U8fdO)
+### ESA Saint-Luc
+* 30 minutes : présentation Julien + outils, installation
+* 2h : expérimentations dans le code
+* 1h30 : impressions plotter iDraw
 
-## Marche à suivre
+## Sketches
+* [Template Overflow](https://editor.p5js.org/v3ga/sketches/lD0uUIE_g)
+* [Template ESA]
+    * Template 1 / Quatre éléments (https://editor.p5js.org/v3ga/sketches/svXuz5vhe)
+    * Template 2 / M comme Malevitch (https://editor.p5js.org/v3ga/sketches/UeVc6oN4i)
+
+## Overflow : Marche à suivre
 ### La méthode simple
 * Rendez-vous sur https://editor.p5js.org/v3ga/sketches/lD0uUIE_g
 * Dupliquez le sketch, modifiez le code, il est prêt pour être tracé !

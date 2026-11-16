@@ -6,7 +6,7 @@ import asyncio
 import tempfile
 
 # ----------------------------------------------------------------
-ID_PLOTTER                  = "roland-dxy-1300"
+ID_PLOTTER                  = "roland-dxy-990"
 PATH_FILE_CONFIG_PLOTTER    = Path(f"data/configs/{ID_PLOTTER}.toml")
 
 # ----------------------------------------------------------------
