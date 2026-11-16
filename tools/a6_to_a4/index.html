@@ -196,17 +196,18 @@ function buildAssembledSvg()
   slots.forEach((s, i) =>
   {
     if (!s) return;
-    const nested = s.el.cloneNode(true);
-    nested.setAttribute('x', (i % 2) * cw);
-    nested.setAttribute('y', Math.floor(i / 2) * ch);
-    nested.setAttribute('width',  cw);
-    nested.setAttribute('height', ch);
-    nested.setAttribute('viewBox', s.vb.join(' '));
-    nested.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    prefixIds(nested, `s${i + 1}-`);
-    const g = document.createElementNS(SVG_NS, 'g');
+    // Flatten : the content of each source <svg> goes in a <g> with a transform
+    // (no nested <svg>) so the output contains a single <svg> root.
+    const src = s.el.cloneNode(true);
+    prefixIds(src, `s${i + 1}-`);
+    const [vx, vy, vw, vh] = s.vb;
+    const k  = Math.min(cw / vw, ch / vh);                       // "meet" : 1 for A6 sources
+    const tx = (i % 2) * cw + (cw - vw * k) / 2 - vx * k;
+    const ty = Math.floor(i / 2) * ch + (ch - vh * k) / 2 - vy * k;
+    const g  = document.createElementNS(SVG_NS, 'g');
     g.setAttribute('id', `slot-${i + 1}`);
-    g.appendChild(document.importNode(nested, true));
+    g.setAttribute('transform', `translate(${+tx.toFixed(5)} ${+ty.toFixed(5)}) scale(${+k.toFixed(8)})`);
+    [...src.childNodes].forEach(n => g.appendChild(document.importNode(n, true)));
     root.appendChild(g);
   });
 
